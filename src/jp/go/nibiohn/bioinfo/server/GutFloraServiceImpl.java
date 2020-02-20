@@ -3061,39 +3061,9 @@ public class GutFloraServiceImpl extends RemoteServiceServlet implements GutFlor
 	 */
 	@Override
 	public String getCurrentUser() {
-		String ret = null;
-		String username = getCurrentUserFromSession();
-		
-		if (username != null) {
-			HikariDataSource ds = getHikariDataSource();
-			Connection connection = null;
-			try {
-				connection = ds.getConnection();
-				
-				Statement statement = connection.createStatement();
-				String sqlQuery = "select name from dbuser where username = '" + username + "'";
-				
-				ResultSet results = statement.executeQuery(sqlQuery);
-				if (results.next()) {
-					ret = results.getString("name");
-				}
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (connection != null) {
-						connection.close();
-					}
-				} catch (SQLException e1) {
-					e1.printStackTrace();
-				}
-				if (ds != null) {
-					ds.close();
-				}
-			}
-		}
-		return ret;
+		String userName = getCurrentUserFromSession() ;
+		String currentUser = userName != null ? userName : "Guest";
+		return currentUser;
 	}
 
 	@Override
