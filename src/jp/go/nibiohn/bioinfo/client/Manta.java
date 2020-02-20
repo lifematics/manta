@@ -27,6 +27,7 @@ import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.HTMLPanel;
 
 import jp.go.nibiohn.bioinfo.shared.GutFloraConfig;
 import jp.go.nibiohn.bioinfo.shared.GutFloraConstant;
@@ -34,7 +35,7 @@ import jp.go.nibiohn.bioinfo.shared.SampleEntry;
 import jp.go.nibiohn.bioinfo.shared.SearchResultData;
 
 /**
- * 
+ *
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class Manta extends BasePage {
@@ -43,16 +44,16 @@ public class Manta extends BasePage {
 
 	private final GutFloraServiceAsync service = GWT.create(GutFloraService.class);
 
-	private List<BaseWidget> widgetTrails = new ArrayList<BaseWidget>(); 
+	private List<BaseWidget> widgetTrails = new ArrayList<BaseWidget>();
 
 	private SampleListWidget sampleListWidget;
 
 	private SampleAnalysisWidget analysisWidget;
-	
+
 	private SampleAnalysisWidget subsetAnalysisWidget;
-	
+
 	private ReadVisualizeWidget readVisualizeWidget;
-	
+
 	/**
 	 * This is the entry point method.
 	 */
@@ -66,7 +67,7 @@ public class Manta extends BasePage {
 			// use English by default
 			History.newItem(GutFloraConstant.LANG_EN + GutFloraConstant.NAVI_LINK_SAMPLE);
 		}
-		
+
 		History.fireCurrentHistoryState();
 
 		VerticalPanel footer = new VerticalPanel();
@@ -74,8 +75,9 @@ public class Manta extends BasePage {
 		footer.add(new HTML("<p><hr style=\"margin-top: 48px;\"/></p>"));
 		footer.add(new HTML("<p style=\"text-align: center;\" class=\"fixlink\">" + GutFloraConfig.FOOTER + "</p>"));
 		infoPanel.add(footer);
-		
+
 		getUserInfo();
+		createSignUpButton();
 	}
 
 	@Override
@@ -104,35 +106,35 @@ public class Manta extends BasePage {
 				langLink.addStyleName("langFlagGb");
 				langLabelPanel.add(langLink);
 			}
-			
+
 			// TODO should provide different language
 			infoMessage(WELCOME_MSG);
 			service.getSampleEntryList(currentLang, new AsyncCallback<List<SampleEntry>>() {
-				
+
 				@Override
 				public void onSuccess(List<SampleEntry> result) {
 					widgetTrails.clear();
-					
+
 					sampleListWidget = new SampleListWidget(result, currentLang);
 					widgetTrails.add(sampleListWidget);
-					
+
 					// force to new a analysisWidget
 					analysisWidget = null;
-					
+
 					mainPanel.clear();
 					mainPanel.add(sampleListWidget);
-					
+
 					infoPanel.setVisible(true);
-					
+
 					setNaviBar();
 				}
-				
+
 				@Override
 				public void onFailure(Throwable caught) {
 					warnMessage(SERVER_ERROR);
 				}
 			});
-			
+
 		// TODO to be improved
 		} else if (value.endsWith(GutFloraConstant.NAVI_LINK_SUBSET_SUFFIX)) {
 			if (value.startsWith(GutFloraConstant.NAVI_LINK_ANALYSIS)) {
@@ -146,7 +148,7 @@ public class Manta extends BasePage {
 						return;
 					}
 					service.getSelectedSampleEntrySet(sampleIdString, currentLang, new AsyncCallback<Set<SampleEntry>>() {
-						
+
 						@Override
 						public void onSuccess(Set<SampleEntry> result) {
 							if (subsetAnalysisWidget == null) {
@@ -167,22 +169,22 @@ public class Manta extends BasePage {
 							}
 							widgetTrails = wList;
 							widgetTrails.add(subsetAnalysisWidget);
-							
+
 							mainPanel.clear();
 							mainPanel.add(subsetAnalysisWidget);
-							
+
 							setNaviBar();
-							
+
 							infoPanel.setVisible(false);
 						}
-						
+
 						@Override
 						public void onFailure(Throwable caught) {
 							warnMessage(SERVER_ERROR);
 						}
 					});
 				}
-				
+
 			} else if (value.startsWith(GutFloraConstant.NAVI_LINK_SEARCH)) {
 				if (subsetAnalysisWidget == null) {
 					// TODO to be defined!
@@ -196,7 +198,7 @@ public class Manta extends BasePage {
 						tabIndex = 2;
 					}
 					SearchResultData searchResultData = subsetAnalysisWidget.getCorrectionResults(tabIndex);
-					
+
 					if (searchResultData == null) {
 						// TODO to be defined!
 						History.newItem(currentLang + GutFloraConstant.NAVI_LINK_ANALYSIS + GutFloraConstant.NAVI_LINK_SUBSET_SUFFIX);
@@ -215,9 +217,9 @@ public class Manta extends BasePage {
 
 					mainPanel.clear();
 					mainPanel.add(resultWidget);
-					
+
 					setNaviBar();
-					
+
 					infoPanel.setVisible(false);
 				}
 			} else if (value.startsWith(GutFloraConstant.NAVI_LINK_VIEW_BARCHART)) {
@@ -231,13 +233,13 @@ public class Manta extends BasePage {
 									+ GutFloraConstant.NAVI_LINK_SUBSET_SUFFIX,
 									readWidget.getSelectedSamples(), readWidget.getSelectedRank(),
 									true, currentLang);
-					
+
 					// subsetClusteredBarChart so far is always the last widget
 					widgetTrails.add(subsetClusteredBarChartWidget);
-					
+
 					mainPanel.clear();
 					mainPanel.add(subsetClusteredBarChartWidget);
-					
+
 					setNaviBar();
 				}
 			} else if (value.startsWith(GutFloraConstant.NAVI_LINK_VIEW_HEATMAP)) {
@@ -251,19 +253,19 @@ public class Manta extends BasePage {
 							+ GutFloraConstant.NAVI_LINK_SUBSET_SUFFIX,
 							readWidget.getSelectedSamples(), readWidget.getSelectedRank(),
 							true, currentLang);
-					
+
 					// subsetClusteredBarChart so far is always the last widget
 					widgetTrails.add(subsetMicrobiotaHeatmapWidget);
-					
+
 					mainPanel.clear();
 					mainPanel.add(subsetMicrobiotaHeatmapWidget);
-					
+
 					setNaviBar();
 				}
 			} else {
 				warnMessage("Illegal URL.");
 				History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
-			}	
+			}
 
 		} else if (value.equals(GutFloraConstant.NAVI_LINK_ANALYSIS)) {
 			if (analysisWidget == null) {
@@ -279,9 +281,9 @@ public class Manta extends BasePage {
 						History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
 						return;
 					}
-					
+
 					analysisWidget = new SampleAnalysisWidget(selectedSamples, currentLang);
-					
+
 				}
 			}
 			Iterator<BaseWidget> iterator = widgetTrails.iterator();
@@ -295,16 +297,16 @@ public class Manta extends BasePage {
 			}
 			widgetTrails = wList;
 			widgetTrails.add(analysisWidget);
-			
+
 			mainPanel.clear();
 			mainPanel.add(analysisWidget);
-			
+
 			setNaviBar();
-			
+
 			// force to new a bar chart widget when request
 			readVisualizeWidget = null;
 			subsetAnalysisWidget = null;
-			
+
 			infoPanel.setVisible(false);
 		} else if (value.startsWith(GutFloraConstant.NAVI_LINK_SEARCH)) {
 			if (analysisWidget == null) {
@@ -318,7 +320,7 @@ public class Manta extends BasePage {
 					tabIndex = 2;
 				}
 				SearchResultData searchResultData = analysisWidget.getCorrectionResults(tabIndex);
-				
+
 				if (searchResultData == null) {
 					History.newItem(currentLang + GutFloraConstant.NAVI_LINK_ANALYSIS);
 					return;
@@ -332,14 +334,14 @@ public class Manta extends BasePage {
 				} else {
 					resultWidget = new SearchResultWidget(selectedSamples, searchResultData, value, currentLang);
 				}
-				
+
 				widgetTrails.add(resultWidget);
 
 				mainPanel.clear();
 				mainPanel.add(resultWidget);
-				
+
 				setNaviBar();
-				
+
 				infoPanel.setVisible(false);
 			}
 		} else if (value.equals(GutFloraConstant.NAVI_LINK_VIEW_BARCHART)) {
@@ -352,7 +354,7 @@ public class Manta extends BasePage {
 					readVisualizeWidget = new ClusteredBarChartWidget(readWidget.getSelectedSamples(),
 							readWidget.getSelectedRank(), false, currentLang);
 				}
-				
+
 				Iterator<BaseWidget> iterator = widgetTrails.iterator();
 				List<BaseWidget> wList = new ArrayList<BaseWidget>();
 				while (iterator.hasNext()) {
@@ -364,12 +366,12 @@ public class Manta extends BasePage {
 				}
 				widgetTrails = wList;
 				widgetTrails.add(readVisualizeWidget);
-				
+
 				mainPanel.clear();
 				mainPanel.add(readVisualizeWidget);
-				
+
 				setNaviBar();
-				
+
 				subsetAnalysisWidget = null;
 			}
 		} else if (value.equals(GutFloraConstant.NAVI_LINK_VIEW_HEATMAP)) {
@@ -382,7 +384,7 @@ public class Manta extends BasePage {
 					readVisualizeWidget = new MicrobiotaHeatmapWidget(readWidget.getSelectedSamples(),
 							readWidget.getSelectedRank(), false, currentLang);
 				}
-				
+
 				Iterator<BaseWidget> iterator = widgetTrails.iterator();
 				List<BaseWidget> wList = new ArrayList<BaseWidget>();
 				while (iterator.hasNext()) {
@@ -394,12 +396,12 @@ public class Manta extends BasePage {
 				}
 				widgetTrails = wList;
 				widgetTrails.add(readVisualizeWidget);
-				
+
 				mainPanel.clear();
 				mainPanel.add(readVisualizeWidget);
-				
+
 				setNaviBar();
-				
+
 				subsetAnalysisWidget = null;
 			}
 		} else if (value.equals(GutFloraConstant.NAVI_LINK_VIEW_PCOA)) {
@@ -411,7 +413,7 @@ public class Manta extends BasePage {
 					ReadsAnalysisWidget readWidget = analysisWidget.getReadsAnalysisWidget();
 					readVisualizeWidget = new PcoaAnalysisWidget(readWidget.getSelectedSamples(), false, currentLang);
 				}
-				
+
 				Iterator<BaseWidget> iterator = widgetTrails.iterator();
 				List<BaseWidget> wList = new ArrayList<BaseWidget>();
 				while (iterator.hasNext()) {
@@ -423,12 +425,12 @@ public class Manta extends BasePage {
 				}
 				widgetTrails = wList;
 				widgetTrails.add(readVisualizeWidget);
-				
+
 				mainPanel.clear();
 				mainPanel.add(readVisualizeWidget);
-				
+
 				setNaviBar();
-				
+
 				subsetAnalysisWidget = null;
 			}
 		} else {
@@ -436,12 +438,12 @@ public class Manta extends BasePage {
 			// choose English as default
 			History.newItem(GutFloraConstant.LANG_EN + GutFloraConstant.NAVI_LINK_SAMPLE);
 		}
-		
+
 	}
 
 	private void setNaviBar() {
 		HorizontalPanel naviBar = new HorizontalPanel();
-		
+
 		Iterator<BaseWidget> iterator = widgetTrails.iterator();
 		while (iterator.hasNext()) {
 			BaseWidget widget = iterator.next();
@@ -454,25 +456,53 @@ public class Manta extends BasePage {
 		}
 		naviPanel.clear();
 		naviPanel.add(naviBar);
-		
+
 	}
 
 	private void getUserInfo() {
 		service.getCurrentUser(new AsyncCallback<String>() {
-			
+
 			@Override
-			public void onSuccess(String result) {
+			public void onSuccess(String currentUser) {
 				RootPanel userInfo = RootPanel.get("userInfo");
 				userInfo.clear(true);
-				// TODO should not hard coded here
-				MenuBar menuBar = new MenuBar();
-				MenuBar userMenu = new MenuBar(true);
-				if (result != null) {
-					menuBar.addItem(result, userMenu);
-					MenuItem logoutMenu = new MenuItem("Logout", new Command() {
-						
+				HTMLPanel userPanel = new HTMLPanel("");
+				userInfo.add(userPanel);
+				userPanel.add(new Label(currentUser));
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				warnMessage(SERVER_ERROR);
+			}
+		});
+		createAuthButton();
+	}
+
+	private void createSignUpButton() {
+		final Button signUpBtn = new Button("Sign Up", new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				DialogBox dialogBox = createAuthDialogBox("Sign Up");
+				dialogBox.setGlassEnabled(true);
+				dialogBox.setAnimationEnabled(true);
+				dialogBox.setAutoHideEnabled(false);
+				dialogBox.center();
+				userIdTb.setFocus(true);
+			}
+		});
+		RootPanel.get("sighUp").add(signUpBtn);
+	}
+
+	private void createAuthButton() {
+		service.getCurrentUser(new AsyncCallback<String>() {
+			@Override
+			public void onSuccess(String currentUser) {
+				RootPanel.get("Auth").clear();
+				if (currentUser != "Guest") {
+					final Button LogoutBtn = new Button("Logout", new ClickHandler() {
 						@Override
-						public void execute() {
+						public void onClick(ClickEvent event) {
 							DialogBox dialogBox = createLogoutDialogBox();
 							dialogBox.setGlassEnabled(true);
 							dialogBox.setAnimationEnabled(true);
@@ -480,15 +510,12 @@ public class Manta extends BasePage {
 							dialogBox.center();
 						}
 					});
-					logoutMenu.addStyleName("userMenu");
-					userMenu.addItem(logoutMenu);
+					RootPanel.get("Auth").add(LogoutBtn);
 				} else {
-					menuBar.addItem(GutFloraConstant.USER_NAME_GUEST, userMenu);
-					MenuItem loginMenu = new MenuItem("Login", new Command() {
-						
+					final Button LoginBtn = new Button("Login", new ClickHandler() {
 						@Override
-						public void execute() {
-							DialogBox dialogBox = createLoginDialogBox();
+						public void onClick(ClickEvent event) {
+							DialogBox dialogBox = createAuthDialogBox("Login");
 							dialogBox.setGlassEnabled(true);
 							dialogBox.setAnimationEnabled(true);
 							dialogBox.setAutoHideEnabled(false);
@@ -496,43 +523,42 @@ public class Manta extends BasePage {
 							userIdTb.setFocus(true);
 						}
 					});
-					loginMenu.addStyleName("userMenu");
-					userMenu.addItem(loginMenu);
+					RootPanel.get("Auth").add(LoginBtn);
 				}
-				userInfo.add(menuBar);
-				
 			}
-			
 			@Override
 			public void onFailure(Throwable caught) {
 				warnMessage(SERVER_ERROR);
 			}
 		});
 	}
-	
+
 	private TextBox userIdTb = new TextBox();
-	private DialogBox createLoginDialogBox() {
+	private DialogBox createAuthDialogBox(String type) {
 		// Create a dialog box and set the caption text
 		final DialogBox dialogBox = new DialogBox(true);
-		dialogBox.setText("Login");
+		dialogBox.setText(type);
 		VerticalPanel vp = new VerticalPanel();
 		vp.setSpacing(6);
 		vp.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-		
+
 		final Label infoLabel = new Label("Input your ID & password:");
 		infoLabel.setStyleName("loginInfo");
 		vp.add(infoLabel);
 
+		userIdTb.setText("");
 		userIdTb.setSize("150px", "18px");
 		final TextBox passwordTb = new PasswordTextBox();
 		passwordTb.setSize("150px", "18px");
+		final TextBox passwordConfirmTb = new PasswordTextBox();
+		passwordConfirmTb.setSize("150px", "18px");
 
-		Button okBtn = new Button("OK", new ClickHandler() {
+		Button authBtn = new Button(type, new ClickHandler() {
 
 			@Override
 			public void onClick(ClickEvent event) {
 				service.loginUser(userIdTb.getText(), passwordTb.getText(), new AsyncCallback<Boolean>() {
-					
+
 					@Override
 					public void onSuccess(Boolean result) {
 						if (result.booleanValue()) {
@@ -545,7 +571,7 @@ public class Manta extends BasePage {
 							infoLabel.setStyleName("loginError");
 						}
 					}
-					
+
 					@Override
 					public void onFailure(Throwable caught) {
 						infoLabel.setText(SERVER_ERROR);
@@ -561,25 +587,34 @@ public class Manta extends BasePage {
 				dialogBox.hide();
 			}
 		});
-		okBtn.setWidth("80px");
+		authBtn.setWidth("80px");
 		cancelBtn.setWidth("80px");
 
-		Grid grid = new Grid(2, 2);
+		int row_number = type == "Sign Up" ? 3 : 2;
+		Grid grid = new Grid(row_number, 2);
 		Label idLabel = new Label("User ID:");
-		idLabel.setWidth("80px");
+		String setWidth = type == "Sign Up" ? "120px" : "80px";
+		idLabel.setWidth(setWidth);
 		idLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
 		grid.setWidget(0, 0, idLabel);
 		grid.setWidget(0, 1, userIdTb);
 		Label pwLabel = new Label("Password:");
-		pwLabel.setWidth("80px");
+		pwLabel.setWidth(setWidth);
 		pwLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
 		grid.setWidget(1, 0, pwLabel);
 		grid.setWidget(1, 1, passwordTb);
+		if (type == "Sign Up") {
+			Label pwConfirmLabel = new Label("Password Confirm:");
+			pwConfirmLabel.setWidth(setWidth);
+			pwConfirmLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
+			grid.setWidget(2, 0, pwConfirmLabel);
+			grid.setWidget(2, 1, passwordConfirmTb);
+		}
 
 		HorizontalPanel hp = new HorizontalPanel();
 		hp.setSpacing(6);
 		hp.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
-		hp.add(okBtn);
+		hp.add(authBtn);
 		hp.add(cancelBtn);
 
 		vp.add(grid);
@@ -589,7 +624,7 @@ public class Manta extends BasePage {
 		// Return the dialog box
 		return dialogBox;
 	}
-	
+
 	private DialogBox createLogoutDialogBox() {
 		// Create a dialog box and set the caption text
 		final DialogBox dialogBox = new DialogBox(true);
@@ -597,17 +632,17 @@ public class Manta extends BasePage {
 		VerticalPanel vp = new VerticalPanel();
 		vp.setSpacing(16);
 		vp.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-		
+
 		final Label infoLabel = new Label("Logout current user?");
 		infoLabel.setStyleName("loginInfo");
 		vp.add(infoLabel);
-		
-		Button okBtn = new Button("Yes", new ClickHandler() {
-			
+
+		Button logoutBtn = new Button("Logout", new ClickHandler() {
+
 			@Override
 			public void onClick(ClickEvent event) {
 				service.logoutCurrentUser(new AsyncCallback<Void>() {
-					
+
 					@Override
 					public void onSuccess(Void result) {
 						getUserInfo();
@@ -615,7 +650,7 @@ public class Manta extends BasePage {
 						History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
 						History.fireCurrentHistoryState();
 					}
-					
+
 					@Override
 					public void onFailure(Throwable caught) {
 						infoLabel.setText("System ERROR!");
@@ -624,24 +659,24 @@ public class Manta extends BasePage {
 				});
 			}
 		});
-		Button cancelBtn = new Button("No", new ClickHandler() {
-			
+		Button cancelBtn = new Button("Cancel", new ClickHandler() {
+
 			@Override
 			public void onClick(ClickEvent event) {
 				dialogBox.hide();
 			}
 		});
-		okBtn.setWidth("80px");
+		logoutBtn.setWidth("80px");
 		cancelBtn.setWidth("80px");
-		
+
 		HorizontalPanel hp = new HorizontalPanel();
 		hp.setSpacing(6);
 		hp.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
-		hp.add(okBtn);
+		hp.add(logoutBtn);
 		hp.add(cancelBtn);
-		
+
 		vp.add(hp);
-		
+
 		dialogBox.add(vp);
 		// Return the dialog box
 		return dialogBox;
