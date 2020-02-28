@@ -77,7 +77,6 @@ public class Manta extends BasePage {
 		infoPanel.add(footer);
 
 		getUserInfo();
-		createSignUpButton();
 	}
 
 	@Override
@@ -464,6 +463,11 @@ public class Manta extends BasePage {
 
 			@Override
 			public void onSuccess(String currentUser) {
+				if(currentUser == "Guest") {
+					createSignUpButton();
+				} else {
+					RootPanel.get("sighUp").clear();
+				}
 				RootPanel userInfo = RootPanel.get("userInfo");
 				userInfo.clear(true);
 				HTMLPanel userPanel = new HTMLPanel("");
@@ -543,7 +547,7 @@ public class Manta extends BasePage {
 		vp.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
 
 		final Label infoLabel = new Label("Input your ID & password:");
-		infoLabel.setStyleName("loginInfo");
+		infoLabel.setStyleName("authInfo");
 		vp.add(infoLabel);
 
 		userIdTb.setText("");
@@ -557,48 +561,63 @@ public class Manta extends BasePage {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				if (type == "Sign Up") {
-					service.createUser(userIdTb.getText(), passwordTb.getText(), passwordConfirmTb.getText(), new AsyncCallback<Boolean>() {
-						@Override
-						public void onSuccess(Boolean result) {
-							if (result.booleanValue()) {
-								getUserInfo();
-								dialogBox.hide();
-								History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
-								History.fireCurrentHistoryState();
-							} else {
-								infoLabel.setText("ERROR! Fail Sign Up.");
-								infoLabel.setStyleName("loginError");
-							}
-						}
+				String username = userIdTb.getText();
+				String password = passwordTb.getText();
+				String passwordConfirm = passwordConfirmTb.getText();
 
-						@Override
-						public void onFailure(Throwable caught) {
-							infoLabel.setText(SERVER_ERROR);
-							infoLabel.setStyleName("Sign Up Error");
-						}
-					});
+				if (username == "" || password == "" || (type == "Sign Up" && passwordConfirm == "")) {
+					infoLabel.setText("ERROR! Please fill in all input fields.");
+					infoLabel.setStyleName("authError");
+				} else if (password.length() < 8) {
+					infoLabel.setText("password require at least 8 characters");
+					infoLabel.setStyleName("authError");
+				} else if (type == "Sign Up" && !password.equals(passwordConfirm)) {
+					infoLabel.setText("Password and Password Confirm is Not Match");
+					infoLabel.setStyleName("authError");
 				} else {
-					service.loginUser(userIdTb.getText(), passwordTb.getText(), new AsyncCallback<Boolean>() {
-						@Override
-						public void onSuccess(Boolean result) {
-							if (result.booleanValue()) {
-								getUserInfo();
-								dialogBox.hide();
-								History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
-								History.fireCurrentHistoryState();
-							} else {
-								infoLabel.setText("ERROR! Incorrect ID or password.");
-								infoLabel.setStyleName("loginError");
+					if (type == "Sign Up") {
+						service.createUser(username, password, passwordConfirm, new AsyncCallback<String>() {
+							@Override
+							public void onSuccess(String result) {
+								if (result.equals("success")) {
+									getUserInfo();
+									dialogBox.hide();
+									History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
+									History.fireCurrentHistoryState();
+								} else {
+									infoLabel.setText(result);
+									infoLabel.setStyleName("authError");
+								}
 							}
-						}
 
-						@Override
-						public void onFailure(Throwable caught) {
-							infoLabel.setText(SERVER_ERROR);
-							infoLabel.setStyleName("loginError");
-						}
-					});
+							@Override
+							public void onFailure(Throwable caught) {
+								infoLabel.setText(SERVER_ERROR);
+								infoLabel.setStyleName("authError");
+							}
+						});
+					} else {
+						service.loginUser(username, password, new AsyncCallback<Boolean>() {
+							@Override
+							public void onSuccess(Boolean result) {
+								if (result.booleanValue()) {
+									getUserInfo();
+									dialogBox.hide();
+									History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
+									History.fireCurrentHistoryState();
+								} else {
+									infoLabel.setText("ERROR! Incorrect ID or password.");
+									infoLabel.setStyleName("authError");
+								}
+							}
+
+							@Override
+							public void onFailure(Throwable caught) {
+								infoLabel.setText(SERVER_ERROR);
+								infoLabel.setStyleName("authError");
+							}
+						});
+					}
 				}
 			}
 		});
@@ -656,7 +675,7 @@ public class Manta extends BasePage {
 		vp.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
 
 		final Label infoLabel = new Label("Logout current user?");
-		infoLabel.setStyleName("loginInfo");
+		infoLabel.setStyleName("authInfo");
 		vp.add(infoLabel);
 
 		Button logoutBtn = new Button("Logout", new ClickHandler() {
@@ -676,7 +695,7 @@ public class Manta extends BasePage {
 					@Override
 					public void onFailure(Throwable caught) {
 						infoLabel.setText("System ERROR!");
-						infoLabel.setStyleName("loginError");
+						infoLabel.setStyleName("authError");
 					}
 				});
 			}

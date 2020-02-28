@@ -3068,28 +3068,31 @@ public class GutFloraServiceImpl extends RemoteServiceServlet implements GutFlor
 	}
 
 	@Override
-	public boolean createUser(String username, String password, String passwordConfirm) {
+	public String createUser(String username, String password, String passwordConfirm) {
 		HikariDataSource ds = getHikariDataSource();
 		Connection connection = null;
-		boolean result = false;
+		String result = "fail";
 		try {
-			if (password.equals(passwordConfirm)) {
-				String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
+			String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
 
-				connection = ds.getConnection();
+			connection = ds.getConnection();
+			Statement statement = connection.createStatement();
 
-				Statement statement = connection.createStatement();
-				String sqlQuery = "insert into dbuser (username, password, is_active) values('" + username + "', '" + hashed + "', true)";
+			String sqlUniqueQuery = "select count(*) from dbuser where username = '" + username + "'";
+			ResultSet uniqueResults = statement.executeQuery(sqlUniqueQuery);
+			uniqueResults.next();
+			if (uniqueResults.getInt(1) == 0) {
+				String sqlInsertQuery = "insert into dbuser (username, password, is_active) values('" + username + "', '" + hashed + "', true)";
 
-				statement.executeUpdate(sqlQuery);
-				result = true;
+				statement.executeUpdate(sqlInsertQuery);
+				result = "success";
 				saveCurrentUserToSession(username);
 			} else {
-				throw new SQLException("Password and Password Confirm is Not Match");
+				result = "ERROR! username already used.";
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
+ 		} finally {
 			try {
 				if (connection != null) {
 					connection.close();

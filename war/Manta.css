@@ -126,12 +126,12 @@ h1.header {
 .userMenu {
 	padding: 5px 10px !important; 
 }
-.loginInfo {
+.authInfo {
 	padding: 5px 25px; 
 	background: url('image/information.png') no-repeat left;
 	text-align: left;
 }
-.loginError {
+.authError {
 	padding: 5px 25px; 
 	background: url('image/exclamation.png') no-repeat left;
 	text-align: left;
