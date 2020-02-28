@@ -534,7 +534,7 @@ public class Manta extends BasePage {
 	}
 
 	private TextBox userIdTb = new TextBox();
-	private DialogBox createAuthDialogBox(String type) {
+	private DialogBox createAuthDialogBox(final String type) {
 		// Create a dialog box and set the caption text
 		final DialogBox dialogBox = new DialogBox(true);
 		dialogBox.setText(type);
@@ -557,27 +557,49 @@ public class Manta extends BasePage {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				service.loginUser(userIdTb.getText(), passwordTb.getText(), new AsyncCallback<Boolean>() {
+				if (type == "Sign Up") {
+					service.createUser(userIdTb.getText(), passwordTb.getText(), passwordConfirmTb.getText(), new AsyncCallback<Boolean>() {
+						@Override
+						public void onSuccess(Boolean result) {
+							if (result.booleanValue()) {
+								getUserInfo();
+								dialogBox.hide();
+								History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
+								History.fireCurrentHistoryState();
+							} else {
+								infoLabel.setText("ERROR! Fail Sign Up.");
+								infoLabel.setStyleName("loginError");
+							}
+						}
 
-					@Override
-					public void onSuccess(Boolean result) {
-						if (result.booleanValue()) {
-							getUserInfo();
-							dialogBox.hide();
-							History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
-							History.fireCurrentHistoryState();
-						} else {
-							infoLabel.setText("ERROR! Incorrect ID or password.");
+						@Override
+						public void onFailure(Throwable caught) {
+							infoLabel.setText(SERVER_ERROR);
+							infoLabel.setStyleName("Sign Up Error");
+						}
+					});
+				} else {
+					service.loginUser(userIdTb.getText(), passwordTb.getText(), new AsyncCallback<Boolean>() {
+						@Override
+						public void onSuccess(Boolean result) {
+							if (result.booleanValue()) {
+								getUserInfo();
+								dialogBox.hide();
+								History.newItem(currentLang + GutFloraConstant.NAVI_LINK_SAMPLE);
+								History.fireCurrentHistoryState();
+							} else {
+								infoLabel.setText("ERROR! Incorrect ID or password.");
+								infoLabel.setStyleName("loginError");
+							}
+						}
+
+						@Override
+						public void onFailure(Throwable caught) {
+							infoLabel.setText(SERVER_ERROR);
 							infoLabel.setStyleName("loginError");
 						}
-					}
-
-					@Override
-					public void onFailure(Throwable caught) {
-						infoLabel.setText(SERVER_ERROR);
-						infoLabel.setStyleName("loginError");
-					}
-				});
+					});
+				}
 			}
 		});
 		Button cancelBtn = new Button("Cancel", new ClickHandler() {
